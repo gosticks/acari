@@ -77,7 +77,15 @@ impl MiteClient {
 
   fn handle_response<T: DeserializeOwned>(response: blocking::Response) -> Result<T, AcariError> {
     match response.status() {
-      StatusCode::OK | StatusCode::CREATED => Ok(response.json()?),
+      StatusCode::OK | StatusCode::CREATED => {
+        let text = response.text().unwrap_or_default();
+        // println!("Response: {:?}", text);
+        // decode json here from text
+        match serde_json::from_str::<T>(text.as_str()) {
+          Ok(t) => Ok(t),
+          Err(e) => Err(AcariError::InternalError(format!("Failed to decode json: {:?}", e))),
+        }
+      }
       status => match response.json::<MiteEntity>() {
         Ok(MiteEntity::Error(msg)) => Err(AcariError::Mite(status.as_u16(), msg)),
         _ => Err(AcariError::Mite(status.as_u16(), status.to_string())),
@@ -174,7 +182,10 @@ impl Client for MiteClient {
   fn get_time_entries(&self, date_span: DateSpan) -> Result<Vec<TimeEntry>, AcariError> {
     Ok(
       self
-        .request::<Vec<MiteEntity>>(Method::GET, &format!("/time_entries.json?user=current&{}", date_span_query_param(&date_span)))?
+        .request::<Vec<MiteEntity>>(
+          Method::GET,
+          &format!("/time_entries.json?user_id=current&{}", date_span_query_param(&date_span)),
+        )?
         .into_iter()
         .filter_map(|entity| match entity {
           MiteEntity::TimeEntry(time_entry) => Some(time_entry.into()),

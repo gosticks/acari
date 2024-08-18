@@ -1,7 +1,5 @@
 mod cached_client;
 mod error;
-mod everhour_client;
-mod everhour_model;
 mod mite_client;
 mod mite_model;
 mod model;
@@ -9,7 +7,6 @@ mod query;
 
 pub use cached_client::{clear_cache, CachedClient};
 pub use error::AcariError;
-pub use everhour_client::EverhourClient;
 pub use mite_client::MiteClient;
 pub use model::{Account, Customer, Minutes, Project, Service, TimeEntry, Tracker, User};
 pub use model::{AccountId, CustomerId, ProjectId, ServiceId, TimeEntryId, UserId};
